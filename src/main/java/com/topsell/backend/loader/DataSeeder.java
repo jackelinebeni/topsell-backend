@@ -1,9 +1,6 @@
 package com.topsell.backend.loader;
 
-import com.topsell.backend.entity.Banner;
-import com.topsell.backend.entity.Brand;
-import com.topsell.backend.entity.Category;
-import com.topsell.backend.entity.Product;
+import com.topsell.backend.entity.*;
 import com.topsell.backend.repository.BannerRepository;
 import com.topsell.backend.repository.BrandRepository;
 import com.topsell.backend.repository.CategoryRepository;
@@ -61,19 +58,44 @@ public class DataSeeder implements CommandLineRunner {
 
         brandRepository.saveAll(Arrays.asList(nike, adidas, samsung));
 
-        // 2. CREAR CATEGORÍAS
+        // 2. CREAR CATEGORÍAS Y SUBCATEGORÍAS
+        // Ropa
         Category ropa = new Category();
         ropa.setName("Ropa");
         ropa.setSlug("ropa");
-        ropa.setDescription("La mejor moda del 2026");
         ropa.setImage("https://placehold.co/300x300?text=Ropa");
 
+        SubCategory camisetas = new SubCategory();
+        camisetas.setName("Camisetas");
+        camisetas.setSlug("camisetas");
+        camisetas.setCategory(ropa);
+
+        SubCategory pantalones = new SubCategory();
+        pantalones.setName("Pantalones");
+        pantalones.setSlug("pantalones");
+        pantalones.setCategory(ropa);
+
+        ropa.setSubCategories(Arrays.asList(camisetas, pantalones));
+
+        // Tecnología
         Category tecno = new Category();
         tecno.setName("Tecnología");
         tecno.setSlug("tecnologia");
-        tecno.setDescription("Gadgets y dispositivos");
         tecno.setImage("https://placehold.co/300x300?text=Tecno");
 
+        SubCategory laptops = new SubCategory();
+        laptops.setName("Laptops");
+        laptops.setSlug("laptops");
+        laptops.setCategory(tecno);
+
+        SubCategory celulares = new SubCategory();
+        celulares.setName("Celulares");
+        celulares.setSlug("celulares");
+        celulares.setCategory(tecno);
+
+        tecno.setSubCategories(Arrays.asList(laptops, celulares));
+
+        // Guardamos las categorías (por el CascadeType.ALL, se guardan solas las subcategorías)
         categoryRepository.saveAll(Arrays.asList(ropa, tecno));
 
         // 3. CREAR BANNERS (HERO CAROUSEL)

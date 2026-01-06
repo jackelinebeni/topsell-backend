@@ -1,7 +1,10 @@
 package com.topsell.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -20,8 +23,11 @@ public class Category {
     @Column(length = 500)
     private String description;
 
-    // Agregado: Guardaremos la URL de la imagen, no los bytes.
-    // Ejemplo: "https://mis3.aws.com/topsell/zapatillas.jpg" o "/uploads/cat1.jpg"
     @Column(length = 500)
     private String image;
+
+    // --- AGREGAR ESTO ---
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @JsonManagedReference // Esto permite que se envíe la lista al frontend
+    private List<SubCategory> subCategories;
 }

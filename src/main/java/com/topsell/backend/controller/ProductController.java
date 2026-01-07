@@ -4,6 +4,7 @@ import com.topsell.backend.entity.Product;
 import com.topsell.backend.repository.CategoryRepository;
 import com.topsell.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +40,39 @@ public class ProductController {
                 .getId();
 
         return productRepository.findByCategoryId(categoryId);
+    }
+
+    // ... tus imports y métodos GET existentes ...
+
+    // AGREGAR ESTOS MÉTODOS PARA EL ADMIN:
+
+    @PostMapping
+    public Product createProduct(@RequestBody Product product) {
+        // Aquí podrías validar que category y brand existan si envías solo IDs,
+        // pero si envías el objeto completo Spring Data lo intenta manejar.
+        return productRepository.save(product);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        product.setName(productDetails.getName());
+        product.setShortDescription(productDetails.getShortDescription());
+        product.setLongDescription(productDetails.getLongDescription());
+        product.setPrice(productDetails.getPrice());
+        product.setStock(productDetails.getStock());
+        product.setImageUrl(productDetails.getImageUrl());
+        product.setCategory(productDetails.getCategory());
+        product.setBrand(productDetails.getBrand());
+
+        return ResponseEntity.ok(productRepository.save(product));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

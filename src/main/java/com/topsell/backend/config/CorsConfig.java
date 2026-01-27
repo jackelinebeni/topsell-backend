@@ -14,7 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**") // Aplica a todas las rutas API
-                        .allowedOrigins("http://localhost:3000", "http://localhost:5173") // Tienda y Admin
+                        .allowedOrigins("http://localhost:3000", "http://localhost:3002") // Tienda y Admin
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

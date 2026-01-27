@@ -32,6 +32,12 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
+    @Column(nullable = false)
+    private String imageUrl;
+
+    private boolean featured = false;
+    private boolean active = true;
+
     // RELACIÓN: Muchos productos pertenecen a una Categoría
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)

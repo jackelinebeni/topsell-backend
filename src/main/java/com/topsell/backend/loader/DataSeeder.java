@@ -1,11 +1,9 @@
 package com.topsell.backend.loader;
 
 import com.topsell.backend.entity.*;
-import com.topsell.backend.repository.BannerRepository;
-import com.topsell.backend.repository.BrandRepository;
-import com.topsell.backend.repository.CategoryRepository;
-import com.topsell.backend.repository.ProductRepository;
+import com.topsell.backend.repository.*;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,16 +13,21 @@ import java.util.List;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final BannerRepository bannerRepository;
 
     // Inyección de dependencias por constructor
-    public DataSeeder(ProductRepository productRepository,
+    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                      ProductRepository productRepository,
                       CategoryRepository categoryRepository,
                       BrandRepository brandRepository,
                       BannerRepository bannerRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.brandRepository = brandRepository;
@@ -36,6 +39,20 @@ public class DataSeeder implements CommandLineRunner {
         // Solo insertamos datos si la BD está vacía (para no duplicar al reiniciar)
         if (categoryRepository.count() == 0) {
             loadData();
+        }
+        if (userRepository.findByEmail("admin@topsell.com").isEmpty()) {
+
+            User admin = User.builder()
+                    .firstName("Super")
+                    .lastName("Admin")
+                    .email("admin@topsell.com")
+                    .password(passwordEncoder.encode("admin123")) // Contraseña inicial
+                    .phone("999999999")
+                    .role(Role.ADMIN) // IMPORTANTE: Rol Admin
+                    .build();
+
+            userRepository.save(admin);
+            System.out.println("✅ USUARIO ADMIN CREADO: admin@topsell.com / admin123");
         }
     }
 
@@ -123,6 +140,7 @@ public class DataSeeder implements CommandLineRunner {
         p1.setLongDescription("Estas zapatillas cuentan con tecnología de aire comprimido...");
         p1.setPrice(new BigDecimal("120.50"));
         p1.setStock(50);
+        p1.setImageUrl("https://placehold.co/600x600?text=Zapatillas+Nike");
         p1.setCategory(ropa);
         p1.setBrand(nike);
 
@@ -133,6 +151,7 @@ public class DataSeeder implements CommandLineRunner {
         p2.setLongDescription("Algodón 100% peruano con diseño exclusivo.");
         p2.setPrice(new BigDecimal("65.00"));
         p2.setStock(20);
+        p2.setImageUrl("https://placehold.co/600x600?text=Polera+Adidas");
         p2.setCategory(ropa);
         p2.setBrand(adidas);
 
@@ -143,6 +162,7 @@ public class DataSeeder implements CommandLineRunner {
         p3.setLongDescription("Pantalla AMOLED 8K, procesador cuántico...");
         p3.setPrice(new BigDecimal("999.99"));
         p3.setStock(10);
+        p3.setImageUrl("https://placehold.co/600x600?text=Galaxy+S25");
         p3.setCategory(tecno);
         p3.setBrand(samsung);
 
@@ -154,6 +174,7 @@ public class DataSeeder implements CommandLineRunner {
         p4.setLongDescription("Tasa de refresco de 240Hz.");
         p4.setPrice(new BigDecimal("450.00"));
         p4.setStock(5);
+        p4.setImageUrl("https://placehold.co/600x600?text=Monitor+Samsung");
         p4.setCategory(tecno);
         p4.setBrand(samsung);
 

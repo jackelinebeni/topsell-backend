@@ -1,5 +1,6 @@
 package com.topsell.backend.controller;
 
+import com.topsell.backend.entity.Brand;
 import com.topsell.backend.entity.Category;
 import com.topsell.backend.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;

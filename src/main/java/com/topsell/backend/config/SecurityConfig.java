@@ -47,9 +47,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // SOLUCIÓN AL ERROR:
-        // En lugar de setAllowedOrigins(List.of("*")) usamos setAllowedOriginPatterns
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000", "http://localhost:3001"));
+        // O mantener "*" si estás en desarrollo, pero asegurar que los métodos DELETE y PUT estén permitidos.
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));

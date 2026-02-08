@@ -1,8 +1,10 @@
 package com.topsell.backend.controller;
 
 import com.topsell.backend.entity.Product;
+import com.topsell.backend.entity.ProductImage;
 import com.topsell.backend.repository.CategoryRepository;
 import com.topsell.backend.repository.ProductRepository;
+import com.topsell.backend.repository.ProductImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,9 @@ public class ProductController {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private ProductImageRepository productImageRepository;
 
     // ========== ENDPOINTS PÚBLICOS (TIENDA) ==========
     
@@ -65,7 +70,18 @@ public class ProductController {
 
     @PostMapping("/admin")
     public Product createProduct(@RequestBody Product product) {
-        return productRepository.save(product);
+        // Guardar el producto
+        Product savedProduct = productRepository.save(product);
+        
+        // Guardar las imágenes secundarias si existen
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
+            for (ProductImage image : product.getImages()) {
+                image.setProduct(savedProduct);
+            }
+            productImageRepository.saveAll(product.getImages());
+        }
+        
+        return savedProduct;
     }
 
     @PutMapping("/admin/{id}")
@@ -74,14 +90,30 @@ public class ProductController {
                 .map(product -> {
                     product.setName(productDetails.getName());
                     product.setSlug(productDetails.getSlug());
+                    product.setShortDescription(productDetails.getShortDescription());
                     product.setLongDescription(productDetails.getLongDescription());
                     product.setPrice(productDetails.getPrice());
                     product.setStock(productDetails.getStock());
                     product.setImageUrl(productDetails.getImageUrl());
                     product.setCategory(productDetails.getCategory());
+                    product.setSubCategory(productDetails.getSubCategory());
                     product.setBrand(productDetails.getBrand());
+                    product.setFeatures(productDetails.getFeatures());
                     product.setFeatured(productDetails.isFeatured());
                     product.setActive(productDetails.isActive());
+                    
+                    // Actualizar imágenes secundarias
+                    if (productDetails.getImages() != null) {
+                        // Limpiar imágenes existentes
+                        product.getImages().clear();
+                        
+                        // Agregar nuevas imágenes
+                        for (ProductImage image : productDetails.getImages()) {
+                            image.setProduct(product);
+                            product.getImages().add(image);
+                        }
+                    }
+                    
                     return ResponseEntity.ok(productRepository.save(product));
                 })
                 .orElse(ResponseEntity.notFound().build());

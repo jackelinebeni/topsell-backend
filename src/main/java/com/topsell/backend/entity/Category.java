@@ -3,7 +3,10 @@ package com.topsell.backend.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -27,7 +30,9 @@ public class Category {
     private String image;
 
     // --- AGREGAR ESTO ---
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference // Esto permite que se envíe la lista al frontend
-    private List<SubCategory> subCategories;
+    @EqualsAndHashCode.Exclude // Excluir de hashCode y equals para evitar bucle infinito
+    @ToString.Exclude // Excluir de toString para evitar bucle infinito
+    private List<SubCategory> subCategories = new ArrayList<>();
 }

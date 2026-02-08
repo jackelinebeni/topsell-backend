@@ -1,8 +1,13 @@
 package com.topsell.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Entity
@@ -38,6 +43,12 @@ public class Product {
     private boolean featured = false;
     private boolean active = true;
 
+    // Lista de características del producto
+    @ElementCollection
+    @CollectionTable(name = "product_features", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "feature")
+    private List<String> features = new ArrayList<>();
+
     // RELACIÓN: Muchos productos pertenecen a una Categoría
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
@@ -47,4 +58,16 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "brand_id") // Puede ser nullable si hay productos sin marca (genéricos)
     private Brand brand;
+
+    // RELACIÓN: Muchos productos pertenecen a una SubCategoría
+    @ManyToOne
+    @JoinColumn(name = "subcategory_id") // Puede ser nullable
+    private SubCategory subCategory;
+
+    // RELACIÓN: Un producto tiene múltiples imágenes secundarias
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<ProductImage> images = new ArrayList<>();
 }

@@ -46,15 +46,18 @@ psql -h <RAILWAY_PGHOST> -U <RAILWAY_PGUSER> -d <RAILWAY_PGDATABASE> < backup.sq
    - Selecciona tu repositorio `topsell-backend`
    - Railway detectará automáticamente que es un proyecto Maven/Spring Boot
 
-3. **Configurar Variables de Entorno**
+3. **Conectar la Base de Datos al Backend**
+   - En Railway, selecciona tu servicio Spring Boot
+   - Ve a "Settings" → "Service Variables"
+   - Click en "Add Variable Reference"
+   - Selecciona tu servicio PostgreSQL
+   - Esto automáticamente añadirá: `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`
+
+4. **Configurar Variables de Entorno Adicionales**
    - En tu servicio Spring Boot, ve a "Variables"
-   - Añade estas variables una por una:
+   - Añade estas variables manualmente:
 
    ```
-   DATABASE_URL=<URL de tu PostgreSQL de Railway>
-   DB_USERNAME=<usuario PostgreSQL de Railway>
-   DB_PASSWORD=<contraseña PostgreSQL de Railway>
-   
    MAIL_USERNAME=tomasninan2@gmail.com
    MAIL_PASSWORD=boeh fgos qhsn yquz
    
@@ -68,9 +71,9 @@ psql -h <RAILWAY_PGHOST> -U <RAILWAY_PGUSER> -d <RAILWAY_PGDATABASE> < backup.sq
    JPA_SHOW_SQL=false
    ```
 
-   **Nota:** Railway automáticamente proporciona la variable `PORT`
+   **Nota:** Railway automáticamente proporciona `PORT` y las variables de PostgreSQL
 
-4. **Configurar el Dominio Público**
+5. **Configurar el Dominio Público**
    - Ve a "Settings" → "Networking"
    - Click en "Generate Domain"
    - Railway te dará una URL pública como: `https://tu-app.up.railway.app`
@@ -117,9 +120,13 @@ Actualiza tu `CorsConfig.java` para permitir tu dominio de Railway:
 
 ## Variables de Entorno Importantes
 
-Railway automáticamente inyecta:
+Railway automáticamente inyecta cuando conectas PostgreSQL:
 - `PORT` - El puerto en el que debe escuchar tu app
-- `DATABASE_URL` - Si conectas el servicio PostgreSQL
+- `PGHOST` - Host de PostgreSQL
+- `PGPORT` - Puerto de PostgreSQL (5432)
+- `PGDATABASE` - Nombre de la base de datos
+- `PGUSER` - Usuario de PostgreSQL
+- `PGPASSWORD` - Contraseña de PostgreSQL
 
 Debes configurar manualmente:
 - Credenciales de email (MAIL_USERNAME, MAIL_PASSWORD)

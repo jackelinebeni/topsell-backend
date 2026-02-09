@@ -1,10 +1,13 @@
 package com.topsell.backend.controller;
 
+import com.topsell.backend.dto.CreateUserRequest;
 import com.topsell.backend.dto.UserDTO;
 import com.topsell.backend.entity.User;
 import com.topsell.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,9 +18,30 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // ========== ENDPOINTS ADMIN ==========
     
+    @PostMapping("/admin")
+    public ResponseEntity<UserDTO> createUser(@RequestBody CreateUserRequest request) {
+        // Verificar si el email ya existe
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        User user = User.builder()
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .password(request.getPassword() != null ? passwordEncoder.encode(request.getPassword()) : null)
+                .role(request.getRole())
+                .build();
+
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDTO(savedUser));
+    }
+
     @GetMapping("/admin")
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream().map(this::convertToDTO).toList();

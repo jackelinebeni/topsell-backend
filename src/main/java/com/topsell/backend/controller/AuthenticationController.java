@@ -30,4 +30,9 @@ public class AuthenticationController {
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(service.login(request));
     }
+
+    @PostMapping("/login-admin")
+    public ResponseEntity<AuthResponse> loginAdmin(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(service.loginAdmin(request));
+    }
 }

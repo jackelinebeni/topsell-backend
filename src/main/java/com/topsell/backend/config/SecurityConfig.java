@@ -32,9 +32,13 @@ public class SecurityConfig {
 
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/products/**", "/api/categories/**", "/api/brands/**", "/api/banners/**", "/api/users/admin/**", "/api/upload/image").permitAll()
-                        .requestMatchers("/api/contacts/**").permitAll() // Permitir todos los endpoints de contacto
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permitir preflight CORS
+                        .requestMatchers("/api/auth/**").permitAll() // Login y registro sin autenticación
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/brands/**", "/api/banners/**").permitAll()
+                        .requestMatchers("/api/contacts/**").permitAll() // Permitir contacto público
+                        .requestMatchers("/api/upload/image").permitAll()
+                        .requestMatchers("/api/users/admin/**").hasAuthority("ADMIN") // Solo administradores
+                        .requestMatchers("/api/quotes/admin/**").hasAuthority("ADMIN") // Solo administradores
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

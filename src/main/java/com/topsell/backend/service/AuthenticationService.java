@@ -7,6 +7,7 @@ import com.topsell.backend.dto.RegisterRequest;
 import com.topsell.backend.dto.RegisterGuestRequest;
 import com.topsell.backend.entity.Role;
 import com.topsell.backend.entity.User;
+import com.topsell.backend.exception.UnauthorizedAccessException;
 import com.topsell.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -64,6 +65,22 @@ public class AuthenticationService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
         var user = repository.findByEmail(request.getEmail()).orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        return AuthResponse.builder().token(jwtToken).user(user).build();
+    }
+
+    // 4. LOGIN ADMIN
+    public AuthResponse loginAdmin(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+        var user = repository.findByEmail(request.getEmail()).orElseThrow();
+        
+        // Validar que el usuario sea ADMIN
+        if (user.getRole() != Role.ADMIN) {
+            throw new UnauthorizedAccessException("Acceso denegado: Solo administradores pueden acceder a esta plataforma");
+        }
+        
         var jwtToken = jwtService.generateToken(user);
         return AuthResponse.builder().token(jwtToken).user(user).build();
     }

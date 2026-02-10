@@ -14,11 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Value;
+
+
 @Service
 public class JwtService {
 
-    // EN PRODUCCIÓN: Pon esto en application.properties
-    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    @Value("${jwt.secret.key}")
+    private String secret_key;
 
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
@@ -53,7 +56,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secret_key);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

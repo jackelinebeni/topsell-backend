@@ -3,7 +3,9 @@ package com.topsell.backend.controller;
 import com.topsell.backend.dto.ContactRequest;
 import com.topsell.backend.entity.Contact;
 import com.topsell.backend.repository.ContactRepository;
+import com.topsell.backend.service.ContactService;
 import com.topsell.backend.service.ReCaptchaService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,9 @@ public class ContactController {
 
     @Autowired
     private ContactRepository contactRepository;
+
+    @Autowired
+    private ContactService contactService;
 
     @Autowired
     private ReCaptchaService reCaptchaService;
@@ -57,6 +62,15 @@ public class ContactController {
         contact.setMensaje(request.getMensaje());
 
         Contact savedContact = contactRepository.save(contact);
+        
+        // Enviar notificación por correo
+        try {
+            contactService.sendContactNotification(savedContact);
+        } catch (MessagingException e) {
+            // Log del error pero no fallar la creación del contacto
+            System.err.println("Error al enviar email de contacto: " + e.getMessage());
+        }
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(savedContact);
     }                                                                                               
 

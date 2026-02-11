@@ -13,6 +13,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -28,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QuoteService {
 
+    @Qualifier("quotesMailSender")
     private final JavaMailSender mailSender;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;

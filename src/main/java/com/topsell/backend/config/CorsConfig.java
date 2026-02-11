@@ -13,8 +13,14 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**") // Aplica a todas las rutas API
-                        .allowedOrigins("http://localhost:3000", "http://localhost:3002") // Tienda y Admin
+                registry.addMapping("/api/**")
+                        .allowedOrigins(
+                            "http://localhost:3000",    // Local: Tienda
+                            "http://localhost:3002",    // Local: Admin
+                            "https://topsell.pe",       // Prod: Tienda (Principal)
+                            "https://www.topsell.pe",   // Prod: Tienda (con www)
+                            "https://admin.topsell.pe"  // Prod: Admin (Subdominio)
+                        )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

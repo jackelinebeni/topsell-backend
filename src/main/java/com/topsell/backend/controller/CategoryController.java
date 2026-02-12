@@ -4,6 +4,7 @@ import com.topsell.backend.entity.Brand;
 import com.topsell.backend.entity.Category;
 import com.topsell.backend.entity.SubCategory;
 import com.topsell.backend.repository.CategoryRepository;
+import com.topsell.backend.repository.ProductRepository;
 import com.topsell.backend.repository.SubCategoryRepository;
 import com.topsell.backend.service.CloudinaryService;
 import jakarta.persistence.EntityManager;
@@ -28,6 +29,9 @@ public class CategoryController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -77,7 +81,7 @@ public class CategoryController {
 
     @PutMapping("/admin/{id}")
     @Transactional
-    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category categoryDetails) {
+    public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody Category categoryDetails) {
         return categoryRepository.findById(id)
                 .map(category -> {
                     try {
@@ -91,59 +95,109 @@ public class CategoryController {
                         // Continuar aunque falle la eliminación de Cloudinary
                     }
                     
-                    category.setName(categoryDetails.getName());
-                    category.setSlug(categoryDetails.getSlug());
-                    category.setDescription(categoryDetails.getDescription());
-                    category.setImage(categoryDetails.getImage());
-                    
-                    // Manejar subcategorías de manera explícita
-                    if (categoryDetails.getSubCategories() != null) {
-                        // Obtener las subcategorías actuales de la BD
-                        List<SubCategory> currentSubs = subCategoryRepository.findByCategoryId(id);
-                        
-                        // Crear lista de IDs del request
-                        List<Long> requestIds = categoryDetails.getSubCategories().stream()
-                            .filter(sc -> sc.getId() != null)
-                            .map(SubCategory::getId)
-                            .toList();
-                        
-                        // Eliminar las subcategorías que ya no están en el request
-                        for (SubCategory currentSub : currentSubs) {
-                            if (!requestIds.contains(currentSub.getId())) {
-                                subCategoryRepository.deleteById(currentSub.getId());
-                            }
-                        }
-                        
-                        // Forzar flush de eliminaciones
-                        entityManager.flush();
-                        
-                        // Actualizar o crear subcategorías
-                        for (SubCategory requestSubCategory : categoryDetails.getSubCategories()) {
-                            if (requestSubCategory.getId() != null) {
-                                // Actualizar existente - buscar la entidad manejada
-                                SubCategory existing = entityManager.find(SubCategory.class, requestSubCategory.getId());
-                                if (existing != null) {
-                                    existing.setName(requestSubCategory.getName());
-                                    existing.setSlug(requestSubCategory.getSlug());
-                                    entityManager.merge(existing);
-                                }
-                            } else {
-                                // Crear nueva
-                                SubCategory newSub = new SubCategory();
-                                newSub.setName(requestSubCategory.getName());
-                                newSub.setSlug(requestSubCategory.getSlug());
-                                newSub.setCategory(category);
-                                entityManager.persist(newSub);
-                            }
-                        }
+                    // Actualizar solo los campos que realmente cambiaron
+                    if (categoryDetails.getName() != null && !categoryDetails.getName().equals(category.getName())) {
+                        category.setName(categoryDetails.getName());
+                    }
+                    if (categoryDetails.getSlug() != null && !categoryDetails.getSlug().equals(category.getSlug())) {
+                        category.setSlug(categoryDetails.getSlug());
+                    }
+                    if (categoryDetails.getDescription() != null && !categoryDetails.getDescription().equals(category.getDescription())) {
+                        category.setDescription(categoryDetails.getDescription());
+                    }
+                    if (categoryDetails.getImage() != null && !categoryDetails.getImage().equals(category.getImage())) {
+                        category.setImage(categoryDetails.getImage());
                     }
                     
-                    // Flush antes de recargar
-                    entityManager.flush();
-                    
-                    // Recargar la categoría con sus subcategorías actualizadas
-                    entityManager.refresh(category);
-                    return ResponseEntity.ok(category);
+                    try {
+                        // SOLO manejar subcategorías si se enviaron explícitamente en el request
+                        // Si el frontend no envía subcategorías (null), no las tocamos
+                        // Si envía una lista vacía [], significa que quiere eliminarlas todas
+                        if (categoryDetails.getSubCategories() != null && !categoryDetails.getSubCategories().isEmpty()) {
+                            // Obtener las subcategorías actuales de la BD
+                            List<SubCategory> currentSubs = subCategoryRepository.findByCategoryId(id);
+                            
+                            // Crear lista de IDs del request (para subcategorías existentes)
+                            List<Long> requestIds = categoryDetails.getSubCategories().stream()
+                                .filter(sc -> sc.getId() != null)
+                                .map(SubCategory::getId)
+                                .toList();
+                            
+                            // Crear lista de slugs del request (para identificar subcategorías por su slug)
+                            List<String> requestSlugs = categoryDetails.getSubCategories().stream()
+                                .filter(sc -> sc.getSlug() != null)
+                                .map(SubCategory::getSlug)
+                                .toList();
+                            
+                            // Eliminar las subcategorías que ya no están en el request
+                            for (SubCategory currentSub : currentSubs) {
+                                // Considerar que NO debe eliminarse si:
+                                // 1. Su ID está en la lista de IDs del request, O
+                                // 2. Su slug está en la lista de slugs del request (sin importar si tiene ID o no)
+                                boolean shouldKeep = requestIds.contains(currentSub.getId()) || 
+                                                   requestSlugs.contains(currentSub.getSlug());
+                                
+                                if (!shouldKeep) {
+                                    // Verificar si hay productos asociados a esta subcategoría
+                                    long productCount = productRepository.findBySubCategoryId(currentSub.getId()).size();
+                                    if (productCount > 0) {
+                                        throw new RuntimeException(
+                                            "No se puede eliminar la subcategoría '" + currentSub.getName() + 
+                                            "' porque tiene " + productCount + " producto(s) asociado(s). " +
+                                            "Primero elimine o reasigne los productos a otra subcategoría.");
+                                    }
+                                    subCategoryRepository.deleteById(currentSub.getId());
+                                }
+                            }
+                            
+                            // Forzar flush de eliminaciones
+                            entityManager.flush();
+                            
+                            // Actualizar o crear subcategorías
+                            for (SubCategory requestSubCategory : categoryDetails.getSubCategories()) {
+                                if (requestSubCategory.getId() != null) {
+                                    // Actualizar existente por ID - buscar la entidad manejada
+                                    SubCategory existing = entityManager.find(SubCategory.class, requestSubCategory.getId());
+                                    if (existing != null) {
+                                        existing.setName(requestSubCategory.getName());
+                                        existing.setSlug(requestSubCategory.getSlug());
+                                        entityManager.merge(existing);
+                                    }
+                                } else if (requestSubCategory.getSlug() != null) {
+                                    // Buscar si ya existe por slug (para cuando el frontend no envía ID)
+                                    SubCategory existing = currentSubs.stream()
+                                        .filter(sub -> sub.getSlug().equals(requestSubCategory.getSlug()))
+                                        .findFirst()
+                                        .orElse(null);
+                                    
+                                    if (existing != null) {
+                                        // Actualizar existente encontrado por slug
+                                        existing.setName(requestSubCategory.getName());
+                                        existing.setSlug(requestSubCategory.getSlug());
+                                        entityManager.merge(existing);
+                                    } else {
+                                        // Crear nueva subcategoría
+                                        SubCategory newSub = new SubCategory();
+                                        newSub.setName(requestSubCategory.getName());
+                                        newSub.setSlug(requestSubCategory.getSlug());
+                                        newSub.setCategory(category);
+                                        entityManager.persist(newSub);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Guardar los cambios en la categoría
+                        categoryRepository.save(category);
+                        
+                        // Recargar la categoría con sus subcategorías actualizadas
+                        Category updatedCategory = categoryRepository.findById(id).orElse(category);
+                        return ResponseEntity.ok(updatedCategory);
+                        
+                    } catch (RuntimeException e) {
+                        // Capturar errores de validación de subcategorías con productos
+                        return ResponseEntity.status(409).body(e.getMessage());
+                    }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -152,6 +206,16 @@ public class CategoryController {
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         return categoryRepository.findById(id)
                 .map(category -> {
+                    // Verificar si hay productos asociados a esta categoría
+                    long productCount = productRepository.findByCategoryId(id).size();
+                    
+                    if (productCount > 0) {
+                        return ResponseEntity.status(409) // 409 Conflict
+                                .body("No se puede eliminar esta categoría porque tiene " + 
+                                      productCount + " producto(s) asociado(s). " +
+                                      "Primero elimine o reasigne los productos a otra categoría.");
+                    }
+                    
                     try {
                         // Eliminar imagen de Cloudinary
                         if (category.getImage() != null && !category.getImage().isEmpty()) {

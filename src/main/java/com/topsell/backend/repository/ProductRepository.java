@@ -15,6 +15,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Filtrar productos por categoría (usando el objeto Category o su ID)
     List<Product> findByCategoryId(Long categoryId);
 
+    // Filtrar productos por subcategoría
+    List<Product> findBySubCategoryId(Long subCategoryId);
+
     // Buscar productos por nombre (Buscador simple tipo "LIKE")
     // Ejemplo: Encuentra "Zapatilla Nike" si busco "Nike"
     List<Product> findByNameContainingIgnoreCase(String name);

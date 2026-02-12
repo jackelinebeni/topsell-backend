@@ -40,17 +40,20 @@ public class MailConfig {
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
         
-        // Propiedades críticas para evitar el timeout
-        props.put("mail.smtp.connectiontimeout", "5000"); // 5 segundos para conectar
-        props.put("mail.smtp.timeout", "5000");           // 5 segundos para leer datos
-        props.put("mail.smtp.writetimeout", "5000");      // 5 segundos para enviar
+        // Configuraciones específicas para saltar firewalls de Cloud
+        props.put("mail.smtp.ssl.enable", "true"); // Usar SSL directo
+        props.put("mail.smtp.starttls.enable", "false"); // Desactivar STARTTLS
+        props.put("mail.smtp.socketFactory.port", "465");
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.socketFactory.fallback", "false");
+
+        // Tiempos de espera más largos para Railway
+        props.put("mail.smtp.connectiontimeout", "15000");
+        props.put("mail.smtp.timeout", "15000");
+        props.put("mail.smtp.writetimeout", "15000");
         
-        // Importante para Ferozo si hay temas de certificados
-        props.put("mail.smtp.ssl.trust", "*"); 
-        
-        // Activa esto temporalmente a "true" para ver el log exacto en consola si falla
+        // Activa esto para ver el log en la consola de Railway
         props.put("mail.debug", "true"); 
     }
 

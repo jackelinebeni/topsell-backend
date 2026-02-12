@@ -36,6 +36,24 @@ public class MailConfig {
     @Value("${mail.contacts.password}")
     private String contactsPassword;
 
+    private void setCommonProperties(JavaMailSenderImpl mailSender) {
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        
+        // Propiedades críticas para evitar el timeout
+        props.put("mail.smtp.connectiontimeout", "5000"); // 5 segundos para conectar
+        props.put("mail.smtp.timeout", "5000");           // 5 segundos para leer datos
+        props.put("mail.smtp.writetimeout", "5000");      // 5 segundos para enviar
+        
+        // Importante para Ferozo si hay temas de certificados
+        props.put("mail.smtp.ssl.trust", "*"); 
+        
+        // Activa esto temporalmente a "true" para ver el log exacto en consola si falla
+        props.put("mail.debug", "true"); 
+    }
+
     @Bean(name = "quotesMailSender")
     @Primary
     public JavaMailSender quotesMailSender() {
@@ -44,13 +62,7 @@ public class MailConfig {
         mailSender.setPort(quotesPort);
         mailSender.setUsername(quotesUsername);
         mailSender.setPassword(quotesPassword);
-
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "false");
-
+        setCommonProperties(mailSender);
         return mailSender;
     }
 
@@ -61,13 +73,7 @@ public class MailConfig {
         mailSender.setPort(contactsPort);
         mailSender.setUsername(contactsUsername);
         mailSender.setPassword(contactsPassword);
-
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "false");
-
+        setCommonProperties(mailSender);
         return mailSender;
     }
 }

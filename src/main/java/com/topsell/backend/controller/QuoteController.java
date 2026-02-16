@@ -27,7 +27,7 @@ public class QuoteController {
         try {
             quoteService.sendQuote(request);
             return ResponseEntity.ok("Cotización enviada con éxito");
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error al enviar el correo");
         }
     }

@@ -5,7 +5,12 @@ import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions; // Opcional
 import com.topsell.backend.dto.ContactRequest;
 import com.topsell.backend.entity.Contact;
+import com.topsell.backend.entity.Role;
+import com.topsell.backend.entity.User;
+import com.topsell.backend.entity.UserSuscriptores;
 import com.topsell.backend.repository.ContactRepository;
+import com.topsell.backend.repository.UserRepository;
+import com.topsell.backend.repository.UserSuscripcionRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.apache.http.HttpStatus;
@@ -25,6 +30,9 @@ public class ContactService {
 
     @Autowired
     private ContactRepository contactRepository;
+
+    @Autowired
+    private UserSuscripcionRepository userSuscripcionRepository;
 
     @Autowired
     private ReCaptchaService reCaptchaService;
@@ -168,5 +176,12 @@ public class ContactService {
         } catch (ResendException e) {
             // No lanzamos excepción para no romper el flujo de guardado del contacto
         }
+    }
+
+    public UserSuscriptores createSuscripcion(String email) {
+        UserSuscriptores user = new UserSuscriptores();
+        user.setEmail(email);
+        user.setRole(Role.NEWS); // Asumiendo que tienes un rol específico
+        return userSuscripcionRepository.save(user);
     }
 }

@@ -2,6 +2,8 @@ package com.topsell.backend.controller;
 
 import com.topsell.backend.dto.ContactRequest;
 import com.topsell.backend.entity.Contact;
+import com.topsell.backend.entity.User;
+import com.topsell.backend.entity.UserSuscriptores;
 import com.topsell.backend.repository.ContactRepository;
 import com.topsell.backend.service.ContactService;
 import com.topsell.backend.service.ReCaptchaService;
@@ -42,6 +44,30 @@ public class ContactController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Ocurrió un error inesperado al procesar tu solicitud."));
+        }
+    }
+    @PostMapping("/subscribe")
+    public ResponseEntity<?> createSuscription(@RequestBody Map<String, Object> payload) {
+        try {
+            Object v = payload.get("verificacion");
+            boolean verificacion = v instanceof Boolean ? (Boolean) v : Boolean.parseBoolean(String.valueOf(v));
+            String email = (String) payload.get("email");
+
+            if (!verificacion) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Por favor, completa la verificación reCAPTCHA."));
+            }
+
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Email inválido."));
+            }
+
+            UserSuscriptores savedContact = contactService.createSuscripcion(email);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedContact);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

@@ -132,6 +132,7 @@ public class ProductController {
                     
                     product.setName(productDetails.getName());
                     product.setSlug(productDetails.getSlug());
+                    product.setSku(productDetails.getSku());
                     product.setShortDescription(productDetails.getShortDescription());
                     product.setLongDescription(productDetails.getLongDescription());
                     product.setPrice(productDetails.getPrice());

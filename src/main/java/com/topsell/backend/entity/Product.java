@@ -21,6 +21,9 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false, unique = true)
+    private String sku;
+
     // "slug" para URLs amigables (ej: "polo-algodon-negro")
     @Column(unique = true)
     private String slug;

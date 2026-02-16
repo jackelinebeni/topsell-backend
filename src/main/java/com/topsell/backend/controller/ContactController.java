@@ -32,47 +32,18 @@ public class ContactController {
 
     @PostMapping
     public ResponseEntity<?> createContact(@RequestBody ContactRequest request) {
-        // Verificar reCAPTCHA
-        if (!reCaptchaService.verifyToken(request.getRecaptchaToken())) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Verificación de reCAPTCHA fallida. Por favor, intenta nuevamente.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
-        // Validaciones adicionales
-        if (request.getCorreo() == null || !request.getCorreo().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Correo electrónico inválido");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
-        if (request.getMensaje() == null || request.getMensaje().length() < 10) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "El mensaje debe tener al menos 10 caracteres");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-
-        // Crear la entidad Contact desde el DTO
-        Contact contact = new Contact();
-        contact.setNombres(request.getNombres());
-        contact.setApellidos(request.getApellidos());
-        contact.setDniOrRuc(request.getDniOrRuc());
-        contact.setRazonSocial(request.getRazonSocial());
-        contact.setCorreo(request.getCorreo());
-        contact.setMensaje(request.getMensaje());
-
-        Contact savedContact = contactRepository.save(contact);
-        
-        // Enviar notificación por correo
         try {
-            contactService.sendContactNotification(savedContact);
-        } catch (MessagingException e) {
-            // Log del error pero no fallar la creación del contacto
-            System.err.println("Error al enviar email de contacto: " + e.getMessage());
+            Contact savedContact = contactService.createContact(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedContact);
+        } catch (IllegalArgumentException e) {
+            // Capturamos las validaciones del servicio (reCAPTCHA, regex, length)
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Ocurrió un error inesperado al procesar tu solicitud."));
         }
-        
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedContact);
-    }                                                                                               
+    }
 
     // ========== ENDPOINTS ADMIN ==========
 

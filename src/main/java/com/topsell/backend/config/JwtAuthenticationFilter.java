@@ -44,31 +44,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 3. Extraer el token
         jwt = authHeader.substring(7);
 
-        // 4. Extraer el email del token
-        userEmail = jwtService.extractUsername(jwt);
+        // 4. Extraer el email del token (puede lanzar excepción si el token está expirado o malformado)
+        try {
+            userEmail = jwtService.extractUsername(jwt);
+        } catch (Exception e) {
+            // Token inválido o expirado: continuar sin autenticación
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         // 5. Si hay email y no está autenticado en el contexto actual
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Cargar detalles del usuario desde la BD
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            try {
+                // Cargar detalles del usuario desde la BD
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-            // Validar si el token corresponde al usuario y no ha expirado
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+                // Validar si el token corresponde al usuario y no ha expirado
+                if (jwtService.isTokenValid(jwt, userDetails)) {
 
-                // Crear objeto de autenticación
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+                    // Crear objeto de autenticación
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
 
-                // Establecer la autenticación en el contexto de Spring Security
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // Establecer la autenticación en el contexto de Spring Security
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (Exception e) {
+                // Usuario no encontrado u otro error: continuar sin autenticación
             }
         }
 

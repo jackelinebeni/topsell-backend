@@ -17,6 +17,8 @@ public class Brand {
     @Column(unique = true)
     private String slug;
 
+    private Integer sortOrder;
+
     // URL del logo de la marca (ej: /uploads/nike-logo.png)
     private String logoUrl;
 }

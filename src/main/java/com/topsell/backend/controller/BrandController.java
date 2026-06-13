@@ -60,8 +60,15 @@ public class BrandController {
                         // Continuar aunque falle la eliminación de Cloudinary
                     }
                     
-                    brand.setName(brandDetails.getName());
-                    brand.setLogoUrl(brandDetails.getLogoUrl());
+                    if (brandDetails.getName() != null) {
+                        brand.setName(brandDetails.getName());
+                    }
+                    if (brandDetails.getLogoUrl() != null) {
+                        brand.setLogoUrl(brandDetails.getLogoUrl());
+                    }
+                    if (brandDetails.getSortOrder() != null) {
+                        brand.setSortOrder(brandDetails.getSortOrder());
+                    }
                     return ResponseEntity.ok(brandRepository.save(brand));
                 })
                 .orElse(ResponseEntity.notFound().build());

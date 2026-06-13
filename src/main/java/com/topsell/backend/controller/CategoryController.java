@@ -65,6 +65,7 @@ public class CategoryController {
 
     @PostMapping("/admin")
     public Category createCategory(@RequestBody Category category) {
+        // sortOrder se mapea directamente desde el request body
         // Guardar la categoría
         Category savedCategory = categoryRepository.save(category);
         
@@ -107,6 +108,9 @@ public class CategoryController {
                     }
                     if (categoryDetails.getImage() != null && !categoryDetails.getImage().equals(category.getImage())) {
                         category.setImage(categoryDetails.getImage());
+                    }
+                    if (categoryDetails.getSortOrder() != null) {
+                        category.setSortOrder(categoryDetails.getSortOrder());
                     }
                     
                     try {

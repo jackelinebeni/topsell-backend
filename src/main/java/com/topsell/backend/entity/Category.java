@@ -29,6 +29,8 @@ public class Category {
     @Column(length = 500)
     private String image;
 
+    private Integer sortOrder;
+
     // --- AGREGAR ESTO ---
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference // Esto permite que se envíe la lista al frontend

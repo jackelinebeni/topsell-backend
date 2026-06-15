@@ -69,6 +69,11 @@ public class BrandController {
                     if (brandDetails.getSortOrder() != null) {
                         brand.setSortOrder(brandDetails.getSortOrder());
                     }
+
+                    if(brandDetails.getSlug() != null) {
+                        brand.setSlug(brandDetails.getSlug());
+                    }
+
                     return ResponseEntity.ok(brandRepository.save(brand));
                 })
                 .orElse(ResponseEntity.notFound().build());
